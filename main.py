@@ -1,8 +1,13 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List
 
-app = FastAPI()
+from database import create_document
+from schemas import ContactMessage
+
+app = FastAPI(title="Portfolio API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,11 +19,19 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello from FastAPI Backend!"}
+    return {"message": "Portfolio backend running"}
 
 @app.get("/api/hello")
 def hello():
     return {"message": "Hello from the backend API!"}
+
+@app.post("/api/contact")
+def submit_contact(message: ContactMessage):
+    try:
+        doc_id = create_document("contactmessage", message)
+        return {"status": "ok", "id": doc_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/test")
 def test_database():
